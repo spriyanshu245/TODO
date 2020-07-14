@@ -3,6 +3,7 @@ import './App.css';
 import { Button, FormControl, Input, InputLabel } from '@material-ui/core';
 import Todo from './Todo.js';
 import db from './firebase' ;
+import firebase from "firebase" ;
 
 function App() {
   const [input, setInput] = useState('');
@@ -10,13 +11,18 @@ function App() {
   // Listen to database when app loads and fetch new todos as they get added or removed.
   useEffect(() => {
     // This code is called when App.js loads
-    db.collection('todos').onSnapshot(snapshot => {
-      setTodos(snapshot.docs.map(doc => doc.data().todo))
+    db.collection('todos').orderBy('timestamp','desc').onSnapshot(snapshot => {
+      setTodos(snapshot.docs.map(doc => ({id: doc.id, todo: doc.data().todo})))
     })
   }, []) ;
   //below fun called after clicking the button
   const addTodo = (event) => {
     event.preventDefault(); //Will stop refresh
+
+    db.collection('todos').add({
+      todo: input,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    })
     setTodos([...todos, input]);
     setInput(''); //clearing up the input after clicking todo button
   }
@@ -25,7 +31,7 @@ function App() {
     <div className="App">
       <h1>TODO APP</h1>
      
-      
+  
       <form>
       <FormControl>
        <InputLabel>Write a Todo</InputLabel>
@@ -38,7 +44,7 @@ function App() {
       
       <ul>
         {todos.map(todo => (
-         <Todo text={todo}/>
+         <Todo todo={todo}/>
          ))}
       </ul>
     </div>
